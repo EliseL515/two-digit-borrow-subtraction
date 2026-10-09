@@ -1,644 +1,502 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>退位减法 · 直观演示</title>
+<title>寶可夢 · 退位減法棒棒圖</title>
 <style>
-  * { box-sizing: border-box; }
+  :root{
+    --gold1:#ffd27a; --gold2:#eda22e;
+    --blue1:#a9d8f7; --blue2:#6bb0e0;
+    --ink:#2b3445; --muted:#7a8ba6;
+    --accent:#e8462c;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    margin:0; padding:22px 14px 90px;
+    font-family:"PingFang TC","Hiragino Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(900px 520px at 8% -12%, #e6f2ff 0%, transparent 62%),
+      radial-gradient(820px 480px at 102% -4%, #f2eaff 0%, transparent 58%),
+      linear-gradient(180deg,#fbfdff,#f2f7fd);
+    min-height:100vh;
+  }
+  .wrap{ max-width:1040px; margin:0 auto; }
 
-  body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    background: linear-gradient(165deg, #eef2ff 0%, #fdf2f8 55%, #ecfeff 100%);
-    color: #1e293b;
-    display: flex;
-    justify-content: center;
-    padding: 22px 14px 48px;
-    -webkit-tap-highlight-color: transparent;
+  header{ text-align:center; margin-bottom:18px; }
+  h1{
+    margin:0; font-size:clamp(22px,4.4vw,32px); letter-spacing:1px;
+    background:linear-gradient(90deg,#f0a13a,#e2653b 45%,#5b8dd6);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
   }
+  .sub{ margin:6px 0 0; color:var(--muted); font-size:14px; }
 
-  .app { width: 100%; max-width: 640px; }
+  .qcard{
+    position:relative; background:#fff; border-radius:20px; padding:20px 22px 18px;
+    box-shadow:0 10px 30px rgba(84,116,160,.13);
+    border:1px solid #eaf1f9;
+  }
+  .qtag{
+    position:absolute; top:-12px; left:20px; font-size:12px; letter-spacing:2px;
+    background:linear-gradient(90deg,#ffc457,#ff9c3d); color:#fff;
+    padding:4px 14px; border-radius:999px; box-shadow:0 4px 12px rgba(255,156,61,.4);
+  }
+  #qtext{ margin:4px 0 12px; font-size:clamp(16px,2.7vw,20px); line-height:1.75; font-weight:600; }
+  .eqline{
+    font-size:clamp(20px,3.6vw,26px); font-weight:800; letter-spacing:1px;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    color:#5b8dd6;
+  }
+  .eqline .qm{ color:var(--accent); }
 
-  /* ---------- 头部 ---------- */
-  header { text-align: center; margin-bottom: 18px; }
-  h1 {
-    font-size: 25px; margin: 0 0 8px;
-    letter-spacing: 3px; color: #312e81;
+  .boards{ display:flex; flex-wrap:wrap; gap:18px; margin-top:20px; }
+  .board{
+    flex:1 1 320px; min-width:280px;
+    background:#fff; border-radius:20px; padding:14px 16px 16px;
+    border:2px solid #eaf1f9;
+    box-shadow:0 8px 24px rgba(84,116,160,.10);
+    transition:border-color .3s, box-shadow .3s, transform .3s;
   }
-  header p {
-    margin: 0; color: #818cf8; font-size: 13.5px; letter-spacing: .5px;
+  .board.highlight{
+    border-color:#ffc857;
+    box-shadow:0 0 0 7px rgba(255,200,87,.22), 0 12px 32px rgba(84,116,160,.18);
+    transform:translateY(-2px);
   }
+  .board-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .who{ font-weight:800; font-size:17px; display:flex; align-items:center; }
+  /* 精靈球圖示 */
+  .who::before{
+    content:''; display:inline-block; width:16px; height:16px; border-radius:50%;
+    background:linear-gradient(180deg,#ee4035 0 46%, #2b3445 46% 54%, #fff 54% 100%);
+    border:1.5px solid #2b3445; margin-right:7px; vertical-align:-2px;
+  }
+  .cnt{
+    font-size:14px; font-weight:700; color:#8a6a20;
+    background:#fff5df; padding:3px 12px; border-radius:999px;
+  }
+  .board-b .cnt{ color:#1f5b8a; background:#e8f4ff; }
 
-  /* ---------- 算式 ---------- */
-  .equation {
-    display: flex; align-items: center; justify-content: center;
-    gap: 10px; margin-bottom: 16px;
+  .place{
+    border:2px dashed #dfe9f5; border-radius:14px;
+    padding:8px 10px 10px; background:#fbfdff; margin-top:8px;
   }
-  .equation input {
-    width: 86px; height: 58px;
-    font-size: 26px; font-weight: 800; text-align: center;
-    border: 2px solid #c7d2fe; border-radius: 15px;
-    background: #fff; color: #1e293b; outline: none;
-    font-family: inherit;
-    transition: border-color .2s, box-shadow .2s, background .2s;
-  }
-  .equation input:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 4px rgba(99,102,241,.15);
-  }
-  .equation input::-webkit-outer-spin-button,
-  .equation input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  .equation input[type=number] { -moz-appearance: textfield; }
+  .plabel{ font-size:11.5px; color:#9db0c8; letter-spacing:1px; margin-bottom:6px; }
 
-  .op { font-size: 26px; font-weight: 800; color: #cbd5e1; }
+  .sticks{ display:flex; align-items:flex-end; gap:6px; min-height:62px; }
+  .sticks.tens{ flex-wrap:nowrap; }
+  .sticks.ones{ flex-wrap:wrap; row-gap:6px; }
 
-  .answer {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 86px; height: 58px;
-    font-size: 26px; font-weight: 800;
-    border-radius: 15px;
-    background: #f1f5f9; color: #a5b4fc;
-    border: 2px dashed #c7d2fe;
-    transition: all .35s cubic-bezier(.4,0,.2,1);
+  .stick{
+    width:7px; height:58px; border-radius:3px; flex:0 0 auto;
+    background:linear-gradient(180deg,var(--gold1),var(--gold2));
+    box-shadow:inset -1px 0 rgba(0,0,0,.13), 0 1px 2px rgba(160,110,20,.18);
   }
-  .answer.done {
-    background: #dcfce7; border: 2px solid #4ade80;
-    color: #16a34a; transform: scale(1.06);
-    box-shadow: 0 6px 18px rgba(74,222,128,.35);
+  .bundle{
+    position:relative; width:26px; height:58px; border-radius:4px; flex:0 0 auto;
+    background:repeating-linear-gradient(to right,var(--gold1) 0 1.4px,var(--gold2) 1.4px 2.6px);
+    box-shadow:inset -1px 0 rgba(0,0,0,.12), 0 1px 2px rgba(160,110,20,.18);
   }
+  .bundle::after{
+    content:''; position:absolute; left:-2px; right:-2px; top:50%; height:9px;
+    transform:translateY(-50%); border-radius:5px;
+    background:linear-gradient(180deg,#c07945,#8a4f2a);
+    box-shadow:0 1px 3px rgba(0,0,0,.25);
+  }
+  .board-b .stick{ background:linear-gradient(180deg,var(--blue1),var(--blue2)); }
+  .board-b .bundle{
+    background:repeating-linear-gradient(to right,var(--blue1) 0 1.4px,var(--blue2) 1.4px 2.6px);
+  }
+  .board-b .bundle::after{ background:linear-gradient(180deg,#5f87b3,#3d5f85); }
 
-  /* ---------- 舞台 ---------- */
-  .stage-outer {
-    position: relative;
-    width: 100%;
-    height: 200px;
-    margin-bottom: 14px;
+  @keyframes bundleBreak{
+    0%{ transform:scale(1) rotate(0deg); opacity:1; }
+    25%{ transform:scale(1.15) rotate(-5deg); }
+    50%{ transform:scale(1.15) rotate(5deg); }
+    100%{ transform:scale(.45) rotate(0deg); opacity:0; }
   }
-  .stage {
-    position: absolute;
-    left: 50%; top: 0;
-    width: 420px; height: 200px;
-    margin-left: -210px;
-    transform-origin: top center;
-  }
+  .bundle.breaking{ animation:bundleBreak .42s ease forwards; }
 
-  .zone-label {
-    position: absolute;
-    font-size: 12px; font-weight: 800;
-    color: #a5b4fc; letter-spacing: 2px;
-    padding: 2px 8px;
-    background: rgba(199,210,254,.28);
-    border-radius: 8px;
-    user-select: none;
-  }
-
-  /* ---------- 十位小棒 ---------- */
-  .bar {
-    position: absolute;
-    width: 12px; height: 80px;
-    border-radius: 4px;
-    background-color: #fbbf24;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      rgba(255,255,255,.95) 0 1.5px,
-      transparent 1.5px 8px
-    );
-    box-shadow: 0 0 0 1.5px #d97706, 0 3px 7px rgba(217,119,6,.22);
-    transition: left .7s cubic-bezier(.34,.8,.36,1),
-                top .7s cubic-bezier(.34,.8,.36,1),
-                opacity .45s ease,
-                transform .7s cubic-bezier(.34,.8,.36,1),
-                box-shadow .3s ease,
-                filter .3s ease;
-    will-change: left, top, transform;
-  }
-  .bar.borrowing {
-    z-index: 20;
-    filter: brightness(1.1) saturate(1.25);
-    animation: glowPulse .9s ease-in-out infinite;
-  }
-  @keyframes glowPulse {
-    0%, 100% { box-shadow: 0 0 0 2.5px #ec4899, 0 0 18px rgba(236,72,153,.45); }
-    50%      { box-shadow: 0 0 0 3.5px #ec4899, 0 0 32px rgba(236,72,153,.75); }
-  }
-
-  /* ---------- 个位小方块 ---------- */
-  .unit {
-    position: absolute;
-    width: 12px; height: 12px;
-    border-radius: 3.5px;
-    background: #60a5fa;
-    box-shadow: 0 0 0 1.5px #2563eb, 0 2px 5px rgba(37,99,235,.22);
-    transition: left .6s cubic-bezier(.34,.8,.36,1),
-                top .6s cubic-bezier(.34,.8,.36,1),
-                opacity .3s ease,
-                transform .4s cubic-bezier(.34,1.4,.64,1),
-                background .3s ease,
-                box-shadow .3s ease;
-    will-change: left, top, transform;
-  }
-  .unit.short {
-    background: #f87171;
-    box-shadow: 0 0 0 1.5px #dc2626, 0 2px 5px rgba(220,38,38,.3);
-    animation: shake .45s ease-in-out infinite;
-  }
-  @keyframes shake {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-3.5px); }
+  @keyframes dropIn{
+    0%{ transform:translateY(-34px) scale(.35); opacity:0; }
+    62%{ transform:translateY(3px) scale(1.06); opacity:1; }
+    100%{ transform:translateY(0) scale(1); opacity:1; }
   }
 
-  /* ---------- 借位提示徽标 ---------- */
-  .ten-badge {
-    position: absolute;
-    transform: translateX(-50%) translateY(8px) scale(.75);
-    opacity: 0;
-    background: linear-gradient(135deg, #34d399, #10b981);
-    color: #fff;
-    font-size: 13px; font-weight: 800;
-    letter-spacing: .5px;
-    padding: 5px 13px;
-    border-radius: 999px;
-    white-space: nowrap;
-    box-shadow: 0 6px 16px rgba(16,185,129,.4);
-    transition: opacity .3s ease, transform .38s cubic-bezier(.34,1.56,.64,1);
-    pointer-events: none;
-    z-index: 30;
+  @keyframes takeAway{
+    0%{ transform:translateY(0) scale(1); opacity:1; }
+    35%{ transform:translateY(-9px) scale(1.12); }
+    100%{ transform:translateY(2px) scale(.55); opacity:.16; filter:grayscale(1); }
   }
-  .ten-badge.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
+  .stick.removed,.bundle.removed{ animation:takeAway .5s ease forwards; }
 
-  /* ---------- 说明文字 ---------- */
-  .message {
-    min-height: 64px;
-    padding: 14px 18px;
-    background: #fff;
-    border-radius: 18px;
-    border: 2px solid #e0e7ff;
-    font-size: 15.5px;
-    line-height: 1.65;
-    text-align: center;
-    color: #334155;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 6px 18px rgba(99,102,241,.07);
+  .stage{
+    display:flex; flex-wrap:wrap; gap:20px; align-items:center;
+    margin-top:20px; background:#fff; border-radius:20px; padding:18px 20px;
+    border:1px solid #eaf1f9; box-shadow:0 8px 24px rgba(84,116,160,.10);
   }
-  .message b {
-    color: #e11d48;
-    font-size: 18px;
-    font-weight: 800;
-    margin: 0 1px;
+  .vertical-wrap{ flex:0 0 auto; transition:opacity .3s; }
+  .vertical-wrap.hidden{ opacity:0; pointer-events:none; }
+  .vertical{ display:inline-block; font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+  .vrow{ display:flex; align-items:center; }
+  .op{ width:34px; text-align:center; font-size:28px; color:var(--muted); }
+  .num{
+    display:inline-block; width:58px; text-align:center; font-size:34px; font-weight:800;
+    color:var(--ink); line-height:1.25;
   }
-  .message.pop { animation: popIn .35s cubic-bezier(.34,1.56,.64,1); }
-  @keyframes popIn {
-    from { transform: scale(.96); opacity: .5; }
-    to   { transform: scale(1);   opacity: 1; }
+  .num.small{ font-size:26px; }
+  .num.changed{ color:var(--accent); }
+  .num.ans{ color:#2f9e6d; }
+  .num.flash{ animation:flashCol 1.1s ease-in-out 3; border-radius:10px; }
+  @keyframes flashCol{
+    0%,100%{ background:transparent; }
+    50%{ background:#ffe9a8; }
   }
+  @keyframes pop{ 0%{ transform:scale(1);} 45%{ transform:scale(1.4);} 100%{ transform:scale(1);} }
+  .num.pop{ animation:pop .45s ease; }
+  .vbar{ height:3px; background:var(--ink); border-radius:2px; margin:6px 0 6px 34px; width:116px; }
 
-  /* ---------- 按钮 ---------- */
-  .buttons {
-    display: flex; gap: 12px; margin-top: 16px;
+  .hint{
+    flex:1 1 260px; font-size:clamp(15px,2.4vw,17px); line-height:1.8;
+    color:#3d4a60; background:#f5faff; border-left:5px solid #8fc4f0;
+    padding:12px 16px; border-radius:12px; min-height:64px;
   }
-  button {
-    height: 54px;
-    border-radius: 16px;
-    border: none;
-    font-size: 16px; font-weight: 800;
-    font-family: inherit;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: transform .15s, box-shadow .25s, background .25s, opacity .2s;
-  }
-  button:active:not(:disabled) { transform: scale(.97); }
-  button:disabled { opacity: .4; cursor: not-allowed; }
+  .hint b{ color:#e2653b; }
+  .hint .ok{ color:#2f9e6d; font-weight:800; }
 
-  .primary {
-    flex: 1;
-    background: linear-gradient(135deg, #6366f1, #a855f7);
-    color: #fff;
-    box-shadow: 0 8px 20px rgba(99,102,241,.35);
+  .controls{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:24px; }
+  .btn{
+    font-family:inherit; font-size:16px; font-weight:700; letter-spacing:.5px;
+    padding:13px 26px; border-radius:14px; border:2px solid #dbe7f4;
+    background:#fff; color:#4a5a75; cursor:pointer;
+    box-shadow:0 4px 12px rgba(84,116,160,.10);
+    transition:transform .15s, box-shadow .15s, background .2s, border-color .2s;
   }
-  .primary:not(:disabled):hover {
-    box-shadow: 0 10px 26px rgba(99,102,241,.48);
+  .btn:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 8px 18px rgba(84,116,160,.18); }
+  .btn:active:not(:disabled){ transform:translateY(0); }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+  .btn.primary{
+    background:linear-gradient(135deg,#ffb648,#ff8a3d);
+    color:#fff; border-color:transparent;
+    box-shadow:0 8px 20px rgba(255,138,61,.38);
   }
+  .btn.primary:hover:not(:disabled){ box-shadow:0 12px 26px rgba(255,138,61,.48); }
 
-  .ghost {
-    flex: 0 0 108px;
-    background: #fff;
-    color: #818cf8;
-    border: 2px solid #e0e7ff;
-    box-shadow: 0 4px 12px rgba(99,102,241,.07);
+  @media (max-width:640px){
+    .board{ padding:12px; }
+    .num{ width:46px; font-size:28px; }
+    .num.small{ font-size:21px; }
+    .op{ width:28px; font-size:22px; }
+    .vbar{ margin-left:28px; width:92px; }
+    .stick,.bundle{ height:50px; }
+    .sticks{ min-height:54px; }
   }
-  .ghost:not(:disabled):hover { background: #f5f3ff; }
 </style>
 </head>
 <body>
-<div class="app">
+<div class="wrap">
 
   <header>
-    <h1>退 位 减 法</h1>
-    <p>个位不够减，就向十位借一个「十」</p>
+    <h1>寶可夢 · 退位減法棒棒圖</h1>
+    <p class="sub">一捆 = 10 根　·　看看「不夠減」的時候怎麼辦</p>
   </header>
 
-  <div class="equation">
-    <input id="inputA" type="number" inputmode="numeric" value="52" min="10" max="99" placeholder="被减数">
-    <span class="op">−</span>
-    <input id="inputB" type="number" inputmode="numeric" value="27" min="1" max="99" placeholder="减数">
-    <span class="op">=</span>
-    <span class="answer" id="answer">?</span>
-  </div>
+  <section class="qcard">
+    <div class="qtag">應用題</div>
+    <p id="qtext">載入中…</p>
+    <div class="eqline" id="eqline"></div>
+  </section>
 
-  <div class="stage-outer">
-    <div class="stage" id="stage">
-      <div class="zone-label" style="left:26px; top:2px;">十位</div>
-      <div class="zone-label" style="left:232px; top:2px;">个位</div>
+  <section class="boards">
+    <div class="board" id="boardA">
+      <div class="board-head">
+        <span class="who" id="whoA">甲</span>
+        <span class="cnt" id="cntA"></span>
+      </div>
+      <div class="place">
+        <div class="plabel">十位　（每捆 10 根）</div>
+        <div class="sticks tens" id="aTens"></div>
+      </div>
+      <div class="place">
+        <div class="plabel">個位　（一根一根）</div>
+        <div class="sticks ones" id="aOnes"></div>
+      </div>
     </div>
-  </div>
 
-  <div class="message" id="message">点「下一步」开始演示</div>
+    <div class="board board-b" id="boardB">
+      <div class="board-head">
+        <span class="who" id="whoB">乙</span>
+        <span class="cnt" id="cntB"></span>
+      </div>
+      <div class="place">
+        <div class="plabel">十位　（每捆 10 根）</div>
+        <div class="sticks tens" id="bTens"></div>
+      </div>
+      <div class="place">
+        <div class="plabel">個位　（一根一根）</div>
+        <div class="sticks ones" id="bOnes"></div>
+      </div>
+    </div>
+  </section>
 
-  <div class="buttons">
-    <button class="primary" id="btnNext">下一步</button>
-    <button class="ghost" id="btnReset">重新开始</button>
+  <section class="stage">
+    <div class="vertical-wrap hidden" id="verticalWrap">
+      <div class="vertical" id="vertical"></div>
+    </div>
+    <div class="hint" id="hint"></div>
+  </section>
+
+  <div class="controls">
+    <button class="btn primary" id="nextBtn">下一步 ▶</button>
+    <button class="btn" id="resetBtn">重來</button>
+    <button class="btn" id="newBtn">換一題</button>
   </div>
 
 </div>
 
 <script>
-(function () {
-  'use strict';
+/* ===================== 工具 ===================== */
+const el  = id => document.getElementById(id);
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
-  /* ====================== 配置 ====================== */
-  const CFG = {
-    tensX: 26,        // 第一根小棒 x
-    tensTop: 32,      // 小棒顶部 y
-    barStep: 15,      // 小棒间距
-    onesX: 232,       // 第一颗小方块 x
-    rowY: [150, 110], // 第0行（下）、第1行（上）的 y
-    step: 15,         // 小方块间距
-    perRow: 10,       // 每行最多几颗
-    stageW: 420,
-    stageH: 200,
-    stashCX: 316,     // 借位时小棒飞到的位置（中心 x）
-    stashCY: 62       // 借位时小棒飞到的位置（中心 y）
-  };
+/* ===================== 寶可夢主題資料 ===================== */
+const ITEMS = [
+  {n:'樹果',u:'顆'},{n:'寶可夢糖果',u:'顆'},{n:'精靈球',u:'個'},
+  {n:'能量方塊',u:'塊'},{n:'樹果汁',u:'瓶'},{n:'寶可夢餅乾',u:'片'},
+  {n:'進化石',u:'顆'},{n:'傷藥',u:'瓶'},{n:'徽章',u:'枚'}
+];
+const NAMES = [
+  '皮卡丘','傑尼龜','妙蛙種子','小火龍','伊布','波波',
+  '卡比獸','胖丁','可達鴨','六尾','喵喵','呆呆獸'
+];
 
-  /* ====================== DOM ====================== */
-  const stage      = document.getElementById('stage');
-  const stageOuter = document.querySelector('.stage-outer');
-  const messageEl  = document.getElementById('message');
-  const answerEl   = document.getElementById('answer');
-  const btnNext    = document.getElementById('btnNext');
-  const btnReset   = document.getElementById('btnReset');
-  const inputA     = document.getElementById('inputA');
-  const inputB     = document.getElementById('inputB');
+let P = null;
+let step = 0;
+let animating = false;
 
-  /* ====================== 状态 ====================== */
-  let barEls  = [];
-  let unitEls = [];
-  let steps   = [];
-  let stepIdx = 0;
-  let busy    = false;
+/* ===================== 產生題目 ===================== */
+function newProblem(){
+  const at = rnd(2,9);
+  const bt = rnd(1, at-1);
+  const ao = rnd(0,8);
+  const bo = rnd(ao+1, 9);
+  const a  = at*10 + ao;
+  const b  = bt*10 + bo;
 
-  /* ====================== 工具 ====================== */
-  const delay = ms => new Promise(r => setTimeout(r, ms));
-  const nextFrame = () =>
-    new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const item = ITEMS[rnd(0, ITEMS.length-1)];
+  const i1 = rnd(0, NAMES.length-1);
+  let   i2 = rnd(0, NAMES.length-1);
+  while (i2 === i1) i2 = rnd(0, NAMES.length-1);
 
-  function fitStage() {
-    const avail = stageOuter.clientWidth;
-    const scale = Math.min(1, avail / CFG.stageW);
-    stage.style.transform = 'scale(' + scale + ')';
-    stageOuter.style.height = (CFG.stageH * scale) + 'px';
+  const n1 = NAMES[i1], n2 = NAMES[i2];
+  const more = Math.random() < 0.5;
+
+  const text = more
+    ? `${n1}有 ${a} ${item.u}${item.n}，${n2}有 ${b} ${item.u}${item.n}。${n1}比${n2}多多少${item.u}${item.n}？`
+    : `${n1}有 ${a} ${item.u}${item.n}，${n2}有 ${b} ${item.u}${item.n}。${n2}比${n1}少多少${item.u}${item.n}？`;
+
+  P = { at, ao, bt, bo, a, b, ans:a-b, n1, n2, item, more, text };
+  buildAll();
+}
+
+/* ===================== 建立畫面 ===================== */
+function makeStick(){
+  const d = document.createElement('div');
+  d.className = 'stick';
+  return d;
+}
+function makeBundle(){
+  const d = document.createElement('div');
+  d.className = 'bundle';
+  return d;
+}
+function renderSticks(tensEl, onesEl, t, o){
+  tensEl.innerHTML = '';
+  onesEl.innerHTML = '';
+  for (let i=0;i<t;i++) tensEl.appendChild(makeBundle());
+  for (let i=0;i<o;i++) onesEl.appendChild(makeStick());
+}
+
+function buildAll(){
+  const {at,ao,bt,bo,a,b,n1,n2,item,text} = P;
+
+  el('qtext').textContent = text;
+  el('eqline').innerHTML = `${a} − ${b} = <span class="qm">?</span>`;
+
+  el('whoA').textContent = n1;
+  el('cntA').textContent = `${a} ${item.u}`;
+  el('whoB').textContent = n2;
+  el('cntB').textContent = `${b} ${item.u}`;
+
+  renderSticks(el('aTens'), el('aOnes'), at, ao);
+  renderSticks(el('bTens'), el('bOnes'), bt, bo);
+
+  el('boardA').classList.remove('highlight');
+  el('verticalWrap').classList.add('hidden');
+  el('vertical').innerHTML = '';
+
+  el('hint').innerHTML =
+    '先看看兩邊的棒棒圖：<b>哪隻寶可夢比較多？</b><br>按「下一步」，我們用小棒把多出來的部分找出來。';
+
+  step = 0;
+  animating = false;
+  updateControls();
+}
+
+function updateControls(){
+  const btn = el('nextBtn');
+  btn.disabled = animating || step >= 4;
+  btn.textContent = step >= 4 ? '完成 ✓' : '下一步 ▶';
+  el('resetBtn').disabled = animating;
+  el('newBtn').disabled = animating;
+}
+
+/* ===================== 豎式 ===================== */
+function renderVertical(){
+  const {at,ao,bt,bo} = P;
+  el('vertical').innerHTML = `
+    <div class="vrow">
+      <span class="op"></span>
+      <span class="num" id="vT1">${at}</span>
+      <span class="num" id="vT0">${ao}</span>
+    </div>
+    <div class="vrow">
+      <span class="op">−</span>
+      <span class="num">${bt}</span>
+      <span class="num">${bo}</span>
+    </div>
+    <div class="vbar"></div>
+    <div class="vrow">
+      <span class="op"></span>
+      <span class="num ans" id="vR1">?</span>
+      <span class="num ans" id="vR0">?</span>
+    </div>`;
+  el('verticalWrap').classList.remove('hidden');
+}
+
+/* ===================== 步驟動畫 ===================== */
+async function nextStep(){
+  if (animating || step >= 4) return;
+  animating = true;
+  updateControls();
+  step++;
+
+  if (step === 1) await step1();
+  else if (step === 2) await step2();
+  else if (step === 3) await step3();
+  else if (step === 4) await step4();
+
+  animating = false;
+  updateControls();
+}
+
+async function step1(){
+  const {a,b,ao,bo} = P;
+  renderVertical();
+  el('hint').innerHTML =
+    `把題目寫成直式：<b>${a} − ${b}</b><br>` +
+    `先看個位：<b>${ao} 減 ${bo} 不夠減</b>！<br>要跟十位借 1 捆來拆開。`;
+  el('vT0').classList.add('flash');
+  await wait(1100);
+}
+
+async function step2(){
+  const {at,ao} = P;
+  el('hint').innerHTML =
+    `從十位借走 <b>1 捆</b>，拆開就變成 <b>10 根</b>單根，<br>個位就夠減了！`;
+
+  const tensBox = el('aTens');
+  const onesBox = el('aOnes');
+  const bundle  = tensBox.lastElementChild;
+
+  if (bundle){
+    bundle.classList.add('breaking');
+    await wait(400);
+    bundle.remove();
   }
 
-  /* 按序号生成位置正确的小方块 */
-  function makeUnit(idx) {
-    const el = document.createElement('div');
-    el.className = 'unit';
-    const row = Math.min(Math.floor(idx / CFG.perRow), CFG.rowY.length - 1);
-    const col = idx % CFG.perRow;
-    el.style.left = (CFG.onesX + col * CFG.step) + 'px';
-    el.style.top  = CFG.rowY[row] + 'px';
-    return el;
+  for (let i=0;i<10;i++){
+    const s = makeStick();
+    s.style.animation = `dropIn .42s ${i*38}ms both`;
+    onesBox.appendChild(s);
+  }
+  await wait(10*38 + 440);
+  [...onesBox.children].forEach(c => { c.style.animation = ''; });
+
+  const t1 = el('vT1');
+  t1.textContent = at - 1;
+  t1.classList.add('changed','pop');
+
+  const t0 = el('vT0');
+  t0.classList.remove('flash');
+  t0.textContent = ao + 10;
+  t0.classList.add('changed','small','pop');
+
+  el('hint').innerHTML =
+    `十位變成 <b>${at-1}</b>，個位變成 <b>${ao+10}</b>。<br>` +
+    `現在個位夠減了，可以開始拿走囉。`;
+  await wait(700);
+}
+
+async function step3(){
+  const {bt,bo,b} = P;
+  el('hint').innerHTML =
+    `要減掉 <b>${b}</b>：<br>先從個位拿走 <b>${bo} 根</b>，再從十位拿走 <b>${bt} 捆</b>。`;
+
+  const onesBox = el('aOnes');
+  const onesArr = [...onesBox.children].filter(c => !c.classList.contains('removed'));
+  for (let i=0;i<bo;i++){
+    const s = onesArr[onesArr.length-1-i];
+    if (s) s.classList.add('removed');
+    await wait(115);
   }
 
-  function unitTarget(idx) {
-    const row = Math.min(Math.floor(idx / CFG.perRow), CFG.rowY.length - 1);
-    const col = idx % CFG.perRow;
-    return {
-      left: CFG.onesX + col * CFG.step,
-      top:  CFG.rowY[row]
-    };
+  const tensBox = el('aTens');
+  const tensArr = [...tensBox.children].filter(c => !c.classList.contains('removed'));
+  for (let i=0;i<bt;i++){
+    const s = tensArr[tensArr.length-1-i];
+    if (s) s.classList.add('removed');
+    await wait(160);
   }
+  await wait(400);
+}
 
-  /* ====================== 动画动作 ====================== */
+async function step4(){
+  const {a,b,ans} = P;
+  el('boardA').classList.add('highlight');
 
-  // 逐个划掉 n 颗小方块
-  async function removeUnits(n) {
-    for (let i = 0; i < n; i++) {
-      const el = unitEls.pop();
-      if (!el) break;
-      el.style.opacity = '0';
-      el.style.transform = 'scale(.2) rotate(28deg)';
-      setTimeout(() => el.remove(), 420);
-      await delay(130);
-    }
-    await delay(300);
-  }
+  const r1 = el('vR1'), r0 = el('vR0');
+  r1.textContent = Math.floor(ans/10);
+  r0.textContent = ans % 10;
+  r1.classList.add('pop');
+  r0.classList.add('pop');
 
-  // 逐个划掉 n 根十位小棒
-  async function removeBars(n) {
-    for (let i = 0; i < n; i++) {
-      const el = barEls.pop();
-      if (!el) break;
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(-26px) scale(.65)';
-      setTimeout(() => el.remove(), 460);
-      await delay(160);
-    }
-    await delay(300);
-  }
+  el('eqline').innerHTML = `${a} − ${b} = <span style="color:#2f9e6d">${ans}</span>`;
 
-  /* ---------- 核心：一根小棒「粒化」成 10 颗小方块 ---------- */
-  async function borrowOne() {
-    const bar = barEls.pop();
-    if (!bar) return;
+  el('hint').innerHTML =
+    `剩下沒有被拿走的小棒，就是多出來的部分：<br>` +
+    `<span class="ok">${a} − ${b} = ${ans}</span><br>` +
+    `所以答案就是 <b>${ans}</b> ${P.item.u}${P.item.n}。`;
 
-    const { stashCX, stashCY } = CFG;
+  await wait(300);
+}
 
-    // ① 高亮，提示要借这一根
-    bar.classList.add('borrowing');
-    await delay(520);
+/* ===================== 事件 ===================== */
+el('nextBtn').addEventListener('click', nextStep);
 
-    // ② 飞到个位上方，并旋转成「横条」——10 个格子的样子
-    bar.style.transformOrigin = 'center center';
-    bar.style.left = (stashCX - 6) + 'px';   // 使旋转后的中心落在 (stashCX, stashCY)
-    bar.style.top  = (stashCY - 40) + 'px';
-    bar.style.transform = 'rotate(90deg)';
-    await delay(780);
+el('resetBtn').addEventListener('click', () => {
+  if (animating) return;
+  buildAll();
+});
 
-    // ③ 显示「1 个十 = 10」徽标
-    const badge = document.createElement('div');
-    badge.className = 'ten-badge';
-    badge.textContent = '1 个十  =  10';
-    badge.style.left = stashCX + 'px';
-    badge.style.top  = (stashCY - 46) + 'px';
-    stage.appendChild(badge);
-    await nextFrame();
-    badge.classList.add('show');
-    await delay(720);
-    badge.classList.remove('show');
-    setTimeout(() => badge.remove(), 420);
+el('newBtn').addEventListener('click', () => {
+  if (animating) return;
+  newProblem();
+});
 
-    // ④ 沿横条一段一段「长」出 10 颗小方块
-    const startIdx = unitEls.length;
-    const fresh = [];
-    for (let i = 0; i < 10; i++) {
-      const el = makeUnit(startIdx + i);
-      el.style.transition = 'none';
-      // 先叠在横条的对应小格上
-      el.style.left = (stashCX - 42 + i * 8) + 'px';
-      el.style.top  = (stashCY - 6) + 'px';
-      el.style.opacity = '0';
-      el.style.transform = 'scale(.2)';
-      stage.appendChild(el);
-      unitEls.push(el);
-      fresh.push(el);
-    }
-
-    await nextFrame();
-
-    // 一颗一颗弹出来
-    for (let i = 0; i < 10; i++) {
-      const el = fresh[i];
-      el.style.transition = '';
-      el.style.opacity = '1';
-      el.style.transform = 'scale(1)';
-      await delay(75);
-    }
-    await delay(220);
-
-    // ⑤ 一颗一颗飞向自己的位置，横条同步变淡
-    for (let i = 0; i < 10; i++) {
-      const el = fresh[i];
-      const t = unitTarget(startIdx + i);
-      el.style.left = t.left + 'px';
-      el.style.top  = t.top + 'px';
-      bar.style.opacity = String(Math.max(0, 1 - (i + 1) / 9));
-      await delay(150);
-    }
-
-    // ⑥ 收尾
-    bar.remove();
-    await delay(420);
-  }
-
-  /* ====================== 构建步骤 ====================== */
-  function buildSteps(a, b) {
-    const aT = Math.floor(a / 10), aO = a % 10;
-    const bT = Math.floor(b / 10), bO = b % 10;
-    const needBorrow = aO < bO;
-    const list = [];
-
-    /* ① 摆出被减数 */
-    list.push({
-      text: `先摆出被减数 <b>${a}</b>：十位 <b>${aT}</b> 根小棒，个位 <b>${aO}</b> 颗方块`,
-      run: async () => {
-        for (let i = 0; i < aT; i++) {
-          const el = document.createElement('div');
-          el.className = 'bar';
-          el.style.left = (CFG.tensX + i * CFG.barStep) + 'px';
-          el.style.top  = CFG.tensTop + 'px';
-          el.style.opacity = '0';
-          el.style.transform = 'translateY(-16px)';
-          stage.appendChild(el);
-          barEls.push(el);
-          await delay(80);
-          el.style.opacity = '1';
-          el.style.transform = 'translateY(0)';
-        }
-        await delay(120);
-
-        for (let i = 0; i < aO; i++) {
-          const el = makeUnit(i);
-          el.style.opacity = '0';
-          el.style.transform = 'scale(.3)';
-          stage.appendChild(el);
-          unitEls.push(el);
-          await delay(70);
-          el.style.opacity = '1';
-          el.style.transform = 'scale(1)';
-        }
-        await delay(260);
-      }
-    });
-
-    /* ② 个位运算 */
-    if (!needBorrow) {
-      list.push({
-        text: `个位：<b>${aO}</b> − <b>${bO}</b> = <b>${aO - bO}</b>，够减，直接划掉 ${bO} 颗`,
-        run: async () => { await removeUnits(bO); }
-      });
-    } else {
-      list.push({
-        text: `个位只有 <b>${aO}</b> 颗，减 <b>${bO}</b> 不够减 —— 要退位！`,
-        run: async () => {
-          unitEls.forEach(el => el.classList.add('short'));
-          await delay(950);
-          unitEls.forEach(el => el.classList.remove('short'));
-          await delay(200);
-        }
-      });
-
-      list.push({
-        text: `从十位借走 <b>1</b> 根小棒，把它拆成 <b>10</b> 颗小方块 ↓`,
-        run: async () => { await borrowOne(); }
-      });
-
-      list.push({
-        text: `个位现在有 <b>${aO + 10}</b> 颗：<b>${aO + 10}</b> − <b>${bO}</b> = <b>${aO + 10 - bO}</b>，划掉 ${bO} 颗`,
-        run: async () => { await removeUnits(bO); }
-      });
-    }
-
-    /* ③ 十位运算 */
-    const tensAfterBorrow = needBorrow ? aT - 1 : aT;
-
-    if (bT > 0) {
-      const hint = needBorrow
-        ? `十位被借走 1 根，还剩 <b>${tensAfterBorrow}</b> 根：`
-        : `十位：`;
-      list.push({
-        text: `${hint}<b>${tensAfterBorrow}</b> − <b>${bT}</b> = <b>${tensAfterBorrow - bT}</b>，划掉 ${bT} 根`,
-        run: async () => { await removeBars(bT); }
-      });
-    } else if (needBorrow) {
-      list.push({
-        text: `减数的十位是 0，十位不用再减，还剩 <b>${tensAfterBorrow}</b> 根`,
-        run: async () => { await delay(500); }
-      });
-    }
-
-    /* ④ 揭晓答案 */
-    list.push({
-      text: `所以 <b>${a}</b> − <b>${b}</b> = <b>${a - b}</b> 🎉`,
-      run: async () => {
-        answerEl.textContent = a - b;
-        answerEl.classList.add('done');
-        await delay(400);
-      }
-    });
-
-    return list;
-  }
-
-  /* ====================== 流程控制 ====================== */
-  async function goNext() {
-    if (busy || stepIdx >= steps.length) return;
-
-    busy = true;
-    btnNext.disabled = true;
-    inputA.disabled = true;
-    inputB.disabled = true;
-
-    const step = steps[stepIdx];
-    messageEl.innerHTML = step.text;
-    messageEl.classList.remove('pop');
-    void messageEl.offsetWidth;
-    messageEl.classList.add('pop');
-
-    try {
-      await step.run();
-    } catch (e) {
-      console.error(e);
-    }
-
-    stepIdx++;
-    busy = false;
-
-    if (stepIdx >= steps.length) {
-      btnNext.textContent = '演示完毕 ✓';
-      btnNext.disabled = true;
-    } else {
-      btnNext.textContent = '下一步';
-      btnNext.disabled = false;
-    }
-  }
-
-  /* 只清空舞台上的图形，不动输入框 */
-  function clearStage() {
-    stage.querySelectorAll('.bar, .unit, .ten-badge').forEach(el => el.remove());
-    barEls = [];
-    unitEls = [];
-  }
-
-  function reset() {
-    clearStage();
-    stepIdx = 0;
-    busy = false;
-
-    answerEl.textContent = '?';
-    answerEl.classList.remove('done');
-    btnNext.textContent = '下一步';
-    btnNext.disabled = false;
-    inputA.disabled = false;
-    inputB.disabled = false;
-
-    let a = parseInt(inputA.value, 10);
-    let b = parseInt(inputB.value, 10);
-
-    // 输入校验
-    if (isNaN(a) || isNaN(b)) {
-      messageEl.innerHTML = '请在两个框里都输入数字 ✍️';
-      btnNext.disabled = true;
-      return;
-    }
-    if (a < 10 || a > 99 || b < 1 || b > 99) {
-      messageEl.innerHTML = '被减数请输入 <b>10 ~ 99</b>，减数请输入 <b>1 ~ 99</b>';
-      btnNext.disabled = true;
-      return;
-    }
-    if (b > a) {
-      messageEl.innerHTML = '被减数要比减数大哦，请重新输入 🙃';
-      btnNext.disabled = true;
-      return;
-    }
-
-    steps = buildSteps(a, b);
-
-    const needBorrow = (a % 10) < (b % 10);
-    messageEl.innerHTML = needBorrow
-      ? '这是一道需要<b>退位</b>的减法，点「下一步」开始吧'
-      : '这道题个位够减，点「下一步」看看';
-
-    fitStage();
-  }
-
-  /* ====================== 事件 ====================== */
-  btnNext.addEventListener('click', goNext);
-  btnReset.addEventListener('click', reset);
-
-  let inputTimer = null;
-  function onInput() {
-    clearTimeout(inputTimer);
-    inputTimer = setTimeout(reset, 600);   // 输入停顿后自动重新演示
-  }
-  inputA.addEventListener('input', onInput);
-  inputB.addEventListener('input', onInput);
-  inputA.addEventListener('change', onInput);
-  inputB.addEventListener('change', onInput);
-
-  window.addEventListener('resize', fitStage);
-
-  /* ====================== 启动 ====================== */
-  reset();
-  fitStage();
-  setTimeout(fitStage, 300);
-
-})();
+/* ===================== 啟動 ===================== */
+newProblem();
 </script>
 </body>
 </html>
