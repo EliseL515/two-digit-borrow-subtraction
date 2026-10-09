@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>退位减法 · 直观演示</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(165deg, #eef2ff 0%, #fdf2f8 55%, #ecfeff 100%);
+    color: #1e293b;
+    display: flex;
+    justify-content: center;
+    padding: 22px 14px 48px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app { width: 100%; max-width: 640px; }
+
+  /* ---------- 头部 ---------- */
+  header { text-align: center; margin-bottom: 18px; }
+  h1 {
+    font-size: 25px; margin: 0 0 8px;
+    letter-spacing: 3px; color: #312e81;
+  }
+  header p {
+    margin: 0; color: #818cf8; font-size: 13.5px; letter-spacing: .5px;
+  }
+
+  /* ---------- 算式 ---------- */
+  .equation {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; margin-bottom: 16px;
+  }
+  .equation input {
+    width: 86px; height: 58px;
+    font-size: 26px; font-weight: 800; text-align: center;
+    border: 2px solid #c7d2fe; border-radius: 15px;
+    background: #fff; color: #1e293b; outline: none;
+    font-family: inherit;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  .equation input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99,102,241,.15);
+  }
+  .equation input::-webkit-outer-spin-button,
+  .equation input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .equation input[type=number] { -moz-appearance: textfield; }
+
+  .op { font-size: 26px; font-weight: 800; color: #cbd5e1; }
+
+  .answer {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 86px; height: 58px;
+    font-size: 26px; font-weight: 800;
+    border-radius: 15px;
+    background: #f1f5f9; color: #a5b4fc;
+    border: 2px dashed #c7d2fe;
+    transition: all .35s cubic-bezier(.4,0,.2,1);
+  }
+  .answer.done {
+    background: #dcfce7; border: 2px solid #4ade80;
+    color: #16a34a; transform: scale(1.06);
+    box-shadow: 0 6px 18px rgba(74,222,128,.35);
+  }
+
+  /* ---------- 舞台 ---------- */
+  .stage-outer {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    margin-bottom: 14px;
+  }
+  .stage {
+    position: absolute;
+    left: 50%; top: 0;
+    width: 420px; height: 200px;
+    margin-left: -210px;
+    transform-origin: top center;
+  }
+
+  .zone-label {
+    position: absolute;
+    font-size: 12px; font-weight: 800;
+    color: #a5b4fc; letter-spacing: 2px;
+    padding: 2px 8px;
+    background: rgba(199,210,254,.28);
+    border-radius: 8px;
+    user-select: none;
+  }
+
+  /* ---------- 十位小棒 ---------- */
+  .bar {
+    position: absolute;
+    width: 12px; height: 80px;
+    border-radius: 4px;
+    background-color: #fbbf24;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.95) 0 1.5px,
+      transparent 1.5px 8px
+    );
+    box-shadow: 0 0 0 1.5px #d97706, 0 3px 7px rgba(217,119,6,.22);
+    transition: left .7s cubic-bezier(.34,.8,.36,1),
+                top .7s cubic-bezier(.34,.8,.36,1),
+                opacity .45s ease,
+                transform .7s cubic-bezier(.34,.8,.36,1),
+                box-shadow .3s ease,
+                filter .3s ease;
+    will-change: left, top, transform;
+  }
+  .bar.borrowing {
+    z-index: 20;
+    filter: brightness(1.1) saturate(1.25);
+    animation: glowPulse .9s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 0 2.5px #ec4899, 0 0 18px rgba(236,72,153,.45); }
+    50%      { box-shadow: 0 0 0 3.5px #ec4899, 0 0 32px rgba(236,72,153,.75); }
+  }
+
+  /* ---------- 个位小方块 ---------- */
+  .unit {
+    position: absolute;
+    width: 12px; height: 12px;
+    border-radius: 3.5px;
+    background: #60a5fa;
+    box-shadow: 0 0 0 1.5px #2563eb, 0 2px 5px rgba(37,99,235,.22);
+    transition: left .6s cubic-bezier(.34,.8,.36,1),
+                top .6s cubic-bezier(.34,.8,.36,1),
+                opacity .3s ease,
+                transform .4s cubic-bezier(.34,1.4,.64,1),
+                background .3s ease,
+                box-shadow .3s ease;
+    will-change: left, top, transform;
+  }
+  .unit.short {
+    background: #f87171;
+    box-shadow: 0 0 0 1.5px #dc2626, 0 2px 5px rgba(220,38,38,.3);
+    animation: shake .45s ease-in-out infinite;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3.5px); }
+  }
+
+  /* ---------- 借位提示徽标 ---------- */
+  .ten-badge {
+    position: absolute;
+    transform: translateX(-50%) translateY(8px) scale(.75);
+    opacity: 0;
+    background: linear-gradient(135deg, #34d399, #10b981);
+    color: #fff;
+    font-size: 13px; font-weight: 800;
+    letter-spacing: .5px;
+    padding: 5px 13px;
+    border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(16,185,129,.4);
+    transition: opacity .3s ease, transform .38s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+    z-index: 30;
+  }
+  .ten-badge.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  /* ---------- 说明文字 ---------- */
+  .message {
+    min-height: 64px;
+    padding: 14px 18px;
+    background: #fff;
+    border-radius: 18px;
+    border: 2px solid #e0e7ff;
+    font-size: 15.5px;
+    line-height: 1.65;
+    text-align: center;
+    color: #334155;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 18px rgba(99,102,241,.07);
+  }
+  .message b {
+    color: #e11d48;
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 1px;
+  }
+  .message.pop { animation: popIn .35s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes popIn {
+    from { transform: scale(.96); opacity: .5; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+
+  /* ---------- 按钮 ---------- */
+  .buttons {
+    display: flex; gap: 12px; margin-top: 16px;
+  }
+  button {
+    height: 54px;
+    border-radius: 16px;
+    border: none;
+    font-size: 16px; font-weight: 800;
+    font-family: inherit;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .25s, background .25s, opacity .2s;
+  }
+  button:active:not(:disabled) { transform: scale(.97); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .primary {
+    flex: 1;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(99,102,241,.35);
+  }
+  .primary:not(:disabled):hover {
+    box-shadow: 0 10px 26px rgba(99,102,241,.48);
+  }
+
+  .ghost {
+    flex: 0 0 108px;
+    background: #fff;
+    color: #818cf8;
+    border: 2px solid #e0e7ff;
+    box-shadow: 0 4px 12px rgba(99,102,241,.07);
+  }
+  .ghost:not(:disabled):hover { background: #f5f3ff; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>退 位 减 法</h1>
+    <p>个位不够减，就向十位借一个「十」</p>
+  </header>
+
+  <div class="equation">
+    <input id="inputA" type="number" inputmode="numeric" value="52" min="10" max="99" placeholder="被减数">
+    <span class="op">−</span>
+    <input id="inputB" type="number" inputmode="numeric" value="27" min="1" max="99" placeholder="减数">
+    <span class="op">=</span>
+    <span class="answer" id="answer">?</span>
+  </div>
+
+  <div class="stage-outer">
+    <div class="stage" id="stage">
+      <div class="zone-label" style="left:26px; top:2px;">十位</div>
+      <div class="zone-label" style="left:232px; top:2px;">个位</div>
+    </div>
+  </div>
+
+  <div class="message" id="message">点「下一步」开始演示</div>
+
+  <div class="buttons">
+    <button class="primary" id="btnNext">下一步</button>
+    <button class="ghost" id="btnReset">重新开始</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ====================== 配置 ====================== */
+  const CFG = {
+    tensX: 26,        // 第一根小棒 x
+    tensTop: 32,      // 小棒顶部 y
+    barStep: 15,      // 小棒间距
+    onesX: 232,       // 第一颗小方块 x
+    rowY: [150, 110], // 第0行（下）、第1行（上）的 y
+    step: 15,         // 小方块间距
+    perRow: 10,       // 每行最多几颗
+    stageW: 420,
+    stageH: 200,
+    stashCX: 316,     // 借位时小棒飞到的位置（中心 x）
+    stashCY: 62       // 借位时小棒飞到的位置（中心 y）
+  };
+
+  /* ====================== DOM ====================== */
+  const stage      = document.getElementById('stage');
+  const stageOuter = document.querySelector('.stage-outer');
+  const messageEl  = document.getElementById('message');
+  const answerEl   = document.getElementById('answer');
+  const btnNext    = document.getElementById('btnNext');
+  const btnReset   = document.getElementById('btnReset');
+  const inputA     = document.getElementById('inputA');
+  const inputB     = document.getElementById('inputB');
+
+  /* ====================== 状态 ====================== */
+  let barEls  = [];
+  let unitEls = [];
+  let steps   = [];
+  let stepIdx = 0;
+  let busy    = false;
+
+  /* ====================== 工具 ====================== */
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+  const nextFrame = () =>
+    new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  function fitStage() {
+    const avail = stageOuter.clientWidth;
+    const scale = Math.min(1, avail / CFG.stageW);
+    stage.style.transform = 'scale(' + scale + ')';
+    stageOuter.style.height = (CFG.stageH * scale) + 'px';
+  }
+
+  /* 按序号生成位置正确的小方块 */
+  function makeUnit(idx) {
+    const el = document.createElement('div');
+    el.className = 'unit';
+    const row = Math.min(Math.floor(idx / CFG.perRow), CFG.rowY.length - 1);
+    const col = idx % CFG.perRow;
+    el.style.left = (CFG.onesX + col * CFG.step) + 'px';
+    el.style.top  = CFG.rowY[row] + 'px';
+    return el;
+  }
+
+  function unitTarget(idx) {
+    const row = Math.min(Math.floor(idx / CFG.perRow), CFG.rowY.length - 1);
+    const col = idx % CFG.perRow;
+    return {
+      left: CFG.onesX + col * CFG.step,
+      top:  CFG.rowY[row]
+    };
+  }
+
+  /* ====================== 动画动作 ====================== */
+
+  // 逐个划掉 n 颗小方块
+  async function removeUnits(n) {
+    for (let i = 0; i < n; i++) {
+      const el = unitEls.pop();
+      if (!el) break;
+      el.style.opacity = '0';
+      el.style.transform = 'scale(.2) rotate(28deg)';
+      setTimeout(() => el.remove(), 420);
+      await delay(130);
+    }
+    await delay(300);
+  }
+
+  // 逐个划掉 n 根十位小棒
+  async function removeBars(n) {
+    for (let i = 0; i < n; i++) {
+      const el = barEls.pop();
+      if (!el) break;
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-26px) scale(.65)';
+      setTimeout(() => el.remove(), 460);
+      await delay(160);
+    }
+    await delay(300);
+  }
+
+  /* ---------- 核心：一根小棒「粒化」成 10 颗小方块 ---------- */
+  async function borrowOne() {
+    const bar = barEls.pop();
+    if (!bar) return;
+
+    const { stashCX, stashCY } = CFG;
+
+    // ① 高亮，提示要借这一根
+    bar.classList.add('borrowing');
+    await delay(520);
+
+    // ② 飞到个位上方，并旋转成「横条」——10 个格子的样子
+    bar.style.transformOrigin = 'center center';
+    bar.style.left = (stashCX - 6) + 'px';   // 使旋转后的中心落在 (stashCX, stashCY)
+    bar.style.top  = (stashCY - 40) + 'px';
+    bar.style.transform = 'rotate(90deg)';
+    await delay(780);
+
+    // ③ 显示「1 个十 = 10」徽标
+    const badge = document.createElement('div');
+    badge.className = 'ten-badge';
+    badge.textContent = '1 个十  =  10';
+    badge.style.left = stashCX + 'px';
+    badge.style.top  = (stashCY - 46) + 'px';
+    stage.appendChild(badge);
+    await nextFrame();
+    badge.classList.add('show');
+    await delay(720);
+    badge.classList.remove('show');
+    setTimeout(() => badge.remove(), 420);
+
+    // ④ 沿横条一段一段「长」出 10 颗小方块
+    const startIdx = unitEls.length;
+    const fresh = [];
+    for (let i = 0; i < 10; i++) {
+      const el = makeUnit(startIdx + i);
+      el.style.transition = 'none';
+      // 先叠在横条的对应小格上
+      el.style.left = (stashCX - 42 + i * 8) + 'px';
+      el.style.top  = (stashCY - 6) + 'px';
+      el.style.opacity = '0';
+      el.style.transform = 'scale(.2)';
+      stage.appendChild(el);
+      unitEls.push(el);
+      fresh.push(el);
+    }
+
+    await nextFrame();
+
+    // 一颗一颗弹出来
+    for (let i = 0; i < 10; i++) {
+      const el = fresh[i];
+      el.style.transition = '';
+      el.style.opacity = '1';
+      el.style.transform = 'scale(1)';
+      await delay(75);
+    }
+    await delay(220);
+
+    // ⑤ 一颗一颗飞向自己的位置，横条同步变淡
+    for (let i = 0; i < 10; i++) {
+      const el = fresh[i];
+      const t = unitTarget(startIdx + i);
+      el.style.left = t.left + 'px';
+      el.style.top  = t.top + 'px';
+      bar.style.opacity = String(Math.max(0, 1 - (i + 1) / 9));
+      await delay(150);
+    }
+
+    // ⑥ 收尾
+    bar.remove();
+    await delay(420);
+  }
+
+  /* ====================== 构建步骤 ====================== */
+  function buildSteps(a, b) {
+    const aT = Math.floor(a / 10), aO = a % 10;
+    const bT = Math.floor(b / 10), bO = b % 10;
+    const needBorrow = aO < bO;
+    const list = [];
+
+    /* ① 摆出被减数 */
+    list.push({
+      text: `先摆出被减数 <b>${a}</b>：十位 <b>${aT}</b> 根小棒，个位 <b>${aO}</b> 颗方块`,
+      run: async () => {
+        for (let i = 0; i < aT; i++) {
+          const el = document.createElement('div');
+          el.className = 'bar';
+          el.style.left = (CFG.tensX + i * CFG.barStep) + 'px';
+          el.style.top  = CFG.tensTop + 'px';
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(-16px)';
+          stage.appendChild(el);
+          barEls.push(el);
+          await delay(80);
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        }
+        await delay(120);
+
+        for (let i = 0; i < aO; i++) {
+          const el = makeUnit(i);
+          el.style.opacity = '0';
+          el.style.transform = 'scale(.3)';
+          stage.appendChild(el);
+          unitEls.push(el);
+          await delay(70);
+          el.style.opacity = '1';
+          el.style.transform = 'scale(1)';
+        }
+        await delay(260);
+      }
+    });
+
+    /* ② 个位运算 */
+    if (!needBorrow) {
+      list.push({
+        text: `个位：<b>${aO}</b> − <b>${bO}</b> = <b>${aO - bO}</b>，够减，直接划掉 ${bO} 颗`,
+        run: async () => { await removeUnits(bO); }
+      });
+    } else {
+      list.push({
+        text: `个位只有 <b>${aO}</b> 颗，减 <b>${bO}</b> 不够减 —— 要退位！`,
+        run: async () => {
+          unitEls.forEach(el => el.classList.add('short'));
+          await delay(950);
+          unitEls.forEach(el => el.classList.remove('short'));
+          await delay(200);
+        }
+      });
+
+      list.push({
+        text: `从十位借走 <b>1</b> 根小棒，把它拆成 <b>10</b> 颗小方块 ↓`,
+        run: async () => { await borrowOne(); }
+      });
+
+      list.push({
+        text: `个位现在有 <b>${aO + 10}</b> 颗：<b>${aO + 10}</b> − <b>${bO}</b> = <b>${aO + 10 - bO}</b>，划掉 ${bO} 颗`,
+        run: async () => { await removeUnits(bO); }
+      });
+    }
+
+    /* ③ 十位运算 */
+    const tensAfterBorrow = needBorrow ? aT - 1 : aT;
+
+    if (bT > 0) {
+      const hint = needBorrow
+        ? `十位被借走 1 根，还剩 <b>${tensAfterBorrow}</b> 根：`
+        : `十位：`;
+      list.push({
+        text: `${hint}<b>${tensAfterBorrow}</b> − <b>${bT}</b> = <b>${tensAfterBorrow - bT}</b>，划掉 ${bT} 根`,
+        run: async () => { await removeBars(bT); }
+      });
+    } else if (needBorrow) {
+      list.push({
+        text: `减数的十位是 0，十位不用再减，还剩 <b>${tensAfterBorrow}</b> 根`,
+        run: async () => { await delay(500); }
+      });
+    }
+
+    /* ④ 揭晓答案 */
+    list.push({
+      text: `所以 <b>${a}</b> − <b>${b}</b> = <b>${a - b}</b> 🎉`,
+      run: async () => {
+        answerEl.textContent = a - b;
+        answerEl.classList.add('done');
+        await delay(400);
+      }
+    });
+
+    return list;
+  }
+
+  /* ====================== 流程控制 ====================== */
+  async function goNext() {
+    if (busy || stepIdx >= steps.length) return;
+
+    busy = true;
+    btnNext.disabled = true;
+    inputA.disabled = true;
+    inputB.disabled = true;
+
+    const step = steps[stepIdx];
+    messageEl.innerHTML = step.text;
+    messageEl.classList.remove('pop');
+    void messageEl.offsetWidth;
+    messageEl.classList.add('pop');
+
+    try {
+      await step.run();
+    } catch (e) {
+      console.error(e);
+    }
+
+    stepIdx++;
+    busy = false;
+
+    if (stepIdx >= steps.length) {
+      btnNext.textContent = '演示完毕 ✓';
+      btnNext.disabled = true;
+    } else {
+      btnNext.textContent = '下一步';
+      btnNext.disabled = false;
+    }
+  }
+
+  /* 只清空舞台上的图形，不动输入框 */
+  function clearStage() {
+    stage.querySelectorAll('.bar, .unit, .ten-badge').forEach(el => el.remove());
+    barEls = [];
+    unitEls = [];
+  }
+
+  function reset() {
+    clearStage();
+    stepIdx = 0;
+    busy = false;
+
+    answerEl.textContent = '?';
+    answerEl.classList.remove('done');
+    btnNext.textContent = '下一步';
+    btnNext.disabled = false;
+    inputA.disabled = false;
+    inputB.disabled = false;
+
+    let a = parseInt(inputA.value, 10);
+    let b = parseInt(inputB.value, 10);
+
+    // 输入校验
+    if (isNaN(a) || isNaN(b)) {
+      messageEl.innerHTML = '请在两个框里都输入数字 ✍️';
+      btnNext.disabled = true;
+      return;
+    }
+    if (a < 10 || a > 99 || b < 1 || b > 99) {
+      messageEl.innerHTML = '被减数请输入 <b>10 ~ 99</b>，减数请输入 <b>1 ~ 99</b>';
+      btnNext.disabled = true;
+      return;
+    }
+    if (b > a) {
+      messageEl.innerHTML = '被减数要比减数大哦，请重新输入 🙃';
+      btnNext.disabled = true;
+      return;
+    }
+
+    steps = buildSteps(a, b);
+
+    const needBorrow = (a % 10) < (b % 10);
+    messageEl.innerHTML = needBorrow
+      ? '这是一道需要<b>退位</b>的减法，点「下一步」开始吧'
+      : '这道题个位够减，点「下一步」看看';
+
+    fitStage();
+  }
+
+  /* ====================== 事件 ====================== */
+  btnNext.addEventListener('click', goNext);
+  btnReset.addEventListener('click', reset);
+
+  let inputTimer = null;
+  function onInput() {
+    clearTimeout(inputTimer);
+    inputTimer = setTimeout(reset, 600);   // 输入停顿后自动重新演示
+  }
+  inputA.addEventListener('input', onInput);
+  inputB.addEventListener('input', onInput);
+  inputA.addEventListener('change', onInput);
+  inputB.addEventListener('change', onInput);
+
+  window.addEventListener('resize', fitStage);
+
+  /* ====================== 启动 ====================== */
+  reset();
+  fitStage();
+  setTimeout(fitStage, 300);
+
+})();
+</script>
+</body>
+</html>
